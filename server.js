@@ -1,53 +1,33 @@
 const express = require('express');
 const cors = require('cors');
-const { connectDB } = require('./db');
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-// Connect to Database
-connectDB();
-
-// ... your routes (login, register, items) go here ...
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-const express = require('express');
-const cors = require('cors');
 require('dotenv').config();
 
-const sequelize = require('./config/database');
+// Import your database and models
+const { connectDB, sequelize } = require('./db');
 const authRoutes = require('./routes/authRoutes');
 const itemRoutes = require('./routes/itemRoutes');
 
 const app = express();
 
 // Middleware
-app.use(cors());                        // Allow frontend to connect
-app.use(express.json());               // Parse JSON request bodies
+app.use(cors()); 
+app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/items', itemRoutes);
 
-// Global Error Handler (catches any unhandled errors)
+// Error Handlers
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
-
 const PORT = process.env.PORT || 5000;
 
-// Sync database then start server
-sequelize.sync({ alter: true })
-  .then(() => {
-    console.log('✅ Database connected and synced');
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-  })
-  .catch(err => console.error('❌ DB connection failed:', err));
+// Connect to DB and Start Server
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+});
